@@ -260,7 +260,7 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
         Motion *nmotion = selectNode(rmotion);
 
         /* sample a random control that attempts to go towards the random state, and also sample a control duration */
-        controlSampler_->sample(rctrl);
+        controlSampler_->sample(rctrl, nmotion->state_);
         unsigned int cd = rng_.uniformInt(siC_->getMinControlDuration(), siC_->getMaxControlDuration());
         unsigned int propCd = siC_->propagateWhileValid(nmotion->state_, rctrl, cd, rstate);
 
