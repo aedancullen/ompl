@@ -250,7 +250,7 @@ const ompl::base::State *ompl::base::PlannerInputStates::nextStart()
         const base::State *st = pdef_->getStartState(addedStartStates_);
         addedStartStates_++;
         bool bounds = si_->satisfiesBounds(st);
-        bool valid = bounds ? si_->isValid(st) : false;
+        bool valid = true;//bounds ? si_->isValid(st) : false;
         if (bounds && valid)
             return st;
 
