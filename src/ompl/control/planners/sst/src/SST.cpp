@@ -267,9 +267,11 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
             /* find closest state in the tree */
             nmotion = selectNode(rmotion);
 
-            cd = (int)seedPath_->getControlDuration(seedStart_);
+            assert(siC_->getMinControlDuration() == siC_->getMaxControlDuration());
+            cd = siC_->getMinControlDuration();
             propCd = siC_->propagateWhileValid(nmotion->state_, rctrl, cd, rstate);
 
+            OMPL_DEBUG("seed cd: %u propCd: %u", cd, propCd);
             seedStart_ += 1;
         }
         else /* Standard sampling procedure */
