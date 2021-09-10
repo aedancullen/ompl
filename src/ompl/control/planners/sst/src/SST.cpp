@@ -207,6 +207,11 @@ ompl::control::SST::Witness *ompl::control::SST::findClosestWitness(ompl::contro
     }
 }
 
+void ompl::control::SST::setSeedPath(control::PathControl *seedPath, int seedStart) {
+    seedPath_ = seedPath;
+    seedStart_ = seedStart;
+}
+
 ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminationCondition &ptc)
 {
     checkValidity();
@@ -250,19 +255,39 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
 
     while (ptc == false)
     {
-        /* sample random state (with goal biasing) */
-        if (goal_s && rng_.uniform01() < goalBias_ && goal_s->canSample())
-            goal_s->sampleGoal(rstate);
-        else
-            sampler_->sampleUniform(rstate);
+        Motion *nmotion;
+        unsigned int cd;
+        unsigned int propCd;
 
-        /* find closest state in the tree */
-        Motion *nmotion = selectNode(rmotion);
+        if (seedStart_ >= 0 && seedStart_ < (int)seedPath_->getControlCount()) /* Use seed motion: set rstate to segment state, set rctrl to segment control */
+        {
+            si_->copyState(rstate, seedPath_->getState(seedStart_));
+            siC_->copyControl(rctrl, seedPath_->getControl(seedStart_));
 
-        /* sample a random control that attempts to go towards the random state, and also sample a control duration */
-        controlSampler_->sample(rctrl, nmotion->state_);
-        unsigned int cd = rng_.uniformInt(siC_->getMinControlDuration(), siC_->getMaxControlDuration());
-        unsigned int propCd = siC_->propagateWhileValid(nmotion->state_, rctrl, cd, rstate);
+            /* find closest state in the tree */
+            nmotion = selectNode(rmotion);
+
+            cd = (int)seedPath_->getControlDuration(seedStart_);
+            propCd = siC_->propagateWhileValid(nmotion->state_, rctrl, cd, rstate);
+
+            seedStart_ += 1;
+        }
+        else /* Standard sampling procedure */
+        {
+            /* sample random state (with goal biasing) */
+            if (goal_s && rng_.uniform01() < goalBias_ && goal_s->canSample())
+                goal_s->sampleGoal(rstate);
+            else
+                sampler_->sampleUniform(rstate);
+
+            /* find closest state in the tree */
+            nmotion = selectNode(rmotion);
+
+            /* sample a random control that attempts to go towards the random state, and also sample a control duration */
+            controlSampler_->sample(rctrl, nmotion->state_);
+            cd = rng_.uniformInt(siC_->getMinControlDuration(), siC_->getMaxControlDuration());
+            propCd = siC_->propagateWhileValid(nmotion->state_, rctrl, cd, rstate);
+        }
 
         if (propCd == cd)
         {
@@ -312,7 +337,7 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
                     prevSolution_.push_back(si_->cloneState(solTrav->state_));
                     prevSolutionCost_ = solution->accCost_;
 
-                    OMPL_INFORM("Found solution with cost %.2f", solution->accCost_.value());
+                    OMPL_INFORM("Found solution with cost %.2f at %u iterations", solution->accCost_.value(), iterations);
                     sufficientlyShort = opt_->isSatisfied(solution->accCost_);
                     if (sufficientlyShort)
                         break;

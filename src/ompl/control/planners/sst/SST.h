@@ -146,7 +146,13 @@ namespace ompl
                 setup();
             }
 
+            void setSeedPath(control::PathControl *seedPath, int seedStart);
+
         protected:
+
+            control::PathControl *seedPath_{nullptr};
+            int seedStart_ = -1;
+
             /** \brief Representation of a motion
 
                 This only contains pointers to parent motions as we
