@@ -94,6 +94,8 @@ namespace ompl
                 at which the control is applied is important. */
             virtual void sample(Control *control, const base::State *state);
 
+            virtual void sample(Control *control, const base::State *state, unsigned int numSelections);
+
             /** \brief Sample a control, given the previously applied
                 control. The default implementation calls the first
                 definition of sample(). For some systems it is

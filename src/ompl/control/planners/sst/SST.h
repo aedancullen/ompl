@@ -198,8 +198,8 @@ namespace ompl
 
                 /** \brief If inactive, this node is not considered for selection.*/
                 bool inactive_{false};
-                
-                bool fresh_{true};
+
+                unsigned int numSelections_{0};
             };
 
             class Witness : public Motion

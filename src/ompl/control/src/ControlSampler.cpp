@@ -42,6 +42,11 @@ void ompl::control::ControlSampler::sample(Control *control, const base::State *
     sample(control);
 }
 
+void ompl::control::ControlSampler::sample(Control *control, const base::State * /* state */, unsigned int /* numSelections */)
+{
+    sample(control);
+}
+
 void ompl::control::ControlSampler::sampleNext(Control *control, const Control * /* previous */)
 {
     sample(control);

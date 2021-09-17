@@ -271,6 +271,8 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
             cd = siC_->getMinControlDuration();
             propCd = siC_->propagateWhileValid(nmotion->state_, rctrl, cd, rstate);
 
+            nmotion->numSelections_++;
+
             OMPL_DEBUG("seed cd: %u propCd: %u", cd, propCd);
             seedStart_ += 1;
         }
@@ -286,9 +288,11 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
             nmotion = selectNode(rmotion);
 
             /* sample a random control that attempts to go towards the random state, and also sample a control duration */
-            controlSampler_->sample(rctrl, nmotion->state_);
+            controlSampler_->sample(rctrl, nmotion->state_, nmotion->numSelections_);
             cd = rng_.uniformInt(siC_->getMinControlDuration(), siC_->getMaxControlDuration());
             propCd = siC_->propagateWhileValid(nmotion->state_, rctrl, cd, rstate);
+
+            nmotion->numSelections_++;
         }
 
         if (propCd == cd)
