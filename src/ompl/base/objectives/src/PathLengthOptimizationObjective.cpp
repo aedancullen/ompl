@@ -54,7 +54,7 @@ ompl::base::Cost ompl::base::PathLengthOptimizationObjective::stateCost(const St
 
 ompl::base::Cost ompl::base::PathLengthOptimizationObjective::motionCost(const State *s1, const State *s2) const
 {
-    return Cost(1 + si_->distance(s1, s2));
+    return Cost(si_->distance(s1, s2));
 }
 
 ompl::base::Cost ompl::base::PathLengthOptimizationObjective::motionCostHeuristic(const State *s1,
