@@ -147,6 +147,7 @@ namespace ompl
             }
 
         protected:
+            class Witness;
             /** \brief Representation of a motion
 
                 This only contains pointers to parent motions as we
@@ -192,6 +193,10 @@ namespace ompl
 
                 /** \brief If inactive, this node is not considered for selection.*/
                 bool inactive_{false};
+
+                std::vector<Motion *> children_;
+
+                std::vector<Witness *> linked_;
             };
 
             class Witness : public Motion
@@ -273,6 +278,12 @@ namespace ompl
 
             /** \brief The optimization objective. */
             base::OptimizationObjectivePtr opt_;
+
+            Motion *next_root_{nullptr};
+
+            void stepTree();
+            void revalidateBelow(Motion *root);
+            void nukeSubtree(Motion *root);
         };
     }
 }

@@ -113,6 +113,7 @@ void ompl::control::SST::clear()
         witnesses_->clear();
     if (opt_)
         prevSolutionCost_ = opt_->infiniteCost();
+    next_root_ = nullptr;
 }
 
 void ompl::control::SST::freeMemory()
@@ -192,6 +193,7 @@ ompl::control::SST::Witness *ompl::control::SST::findClosestWitness(ompl::contro
         {
             closest = new Witness(siC_);
             closest->linkRep(node);
+            node->linked_.push_back(closest);
             si_->copyState(closest->state_, node->state_);
             witnesses_->add(closest);
         }
@@ -201,10 +203,58 @@ ompl::control::SST::Witness *ompl::control::SST::findClosestWitness(ompl::contro
     {
         auto *closest = new Witness(siC_);
         closest->linkRep(node);
+        node->linked_.push_back(closest);
         si_->copyState(closest->state_, node->state_);
         witnesses_->add(closest);
         return closest;
     }
+}
+
+void ompl::control::SST::stepTree() {
+    // deparent next_root_ from its parent, nuke the parent, and null next_root_->parent_
+    next_root_->parent_->children_.erase(std::remove(next_root_->parent_->children_.begin(), next_root_->parent_->children_.end(), next_root_), next_root_->parent_->children_.end());
+    next_root_->parent_->numChildren_--;
+
+    nukeSubtree(next_root_->parent_);
+
+    next_root_->parent_ = nullptr;
+}
+
+void ompl::control::SST::revalidateBelow(Motion *node) {
+    // for each child, if it is invalid call nukeSubtree on it, else revalidateBelow it
+    for (auto &child : node->children_) {
+        if (!siC_->isValid(child->state_)) {
+            nukeSubtree(child);
+        }
+        else {
+            revalidateBelow(child);
+        }
+    }
+}
+
+void ompl::control::SST::nukeSubtree(Motion *node) {
+    // nuke all children, update the parent if necessary and free this node
+    for (auto &child : node->children_) {
+        nukeSubtree(child);
+    }
+
+    if (node->parent_ != nullptr) {
+        node->parent_->children_.erase(std::remove(node->parent_->children_.begin(), node->parent_->children_.end(), node), node->parent_->children_.end());
+        node->parent_->numChildren_--;
+    }
+
+    for (auto &witness : node->linked_) {
+        witnesses_->remove(witness);
+        delete witness;
+    }
+    nn_->remove(node);
+    if (node->state_) {
+        si_->freeState(node->state_);
+    }
+    if (node->control_) {
+        siC_->freeControl(node->control_);
+    }
+    delete node;
 }
 
 ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminationCondition &ptc)
@@ -213,14 +263,20 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
     base::Goal *goal = pdef_->getGoal().get();
     auto *goal_s = dynamic_cast<base::GoalSampleableRegion *>(goal);
 
-    while (const base::State *st = pis_.nextStart())
-    {
-        auto *motion = new Motion(siC_);
-        si_->copyState(motion->state_, st);
-        siC_->nullControl(motion->control_);
-        nn_->add(motion);
-        motion->accCost_ = opt_->identityCost();
-        findClosestWitness(motion);
+    if (next_root_ == nullptr) {
+        while (const base::State *st = pis_.nextStart())
+        {
+            auto *motion = new Motion(siC_);
+            si_->copyState(motion->state_, st);
+            siC_->nullControl(motion->control_);
+            nn_->add(motion);
+            motion->accCost_ = opt_->identityCost();
+            findClosestWitness(motion);
+        }
+    }
+    else {
+        stepTree();
+        revalidateBelow(next_root_);
     }
 
     if (nn_->size() == 0)
@@ -284,8 +340,11 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
                 siC_->copyControl(motion->control_, rctrl);
                 motion->steps_ = cd;
                 motion->parent_ = nmotion;
+                nmotion->children_.push_back(motion);
                 nmotion->numChildren_++;
+                closestWitness->rep_->linked_.erase(std::remove(closestWitness->rep_->linked_.begin(), closestWitness->rep_->linked_.end(), closestWitness), closestWitness->rep_->linked_.end());
                 closestWitness->linkRep(motion);
+                motion->linked_.push_back(closestWitness);
 
                 nn_->add(motion);
                 double dist = 0.0;
@@ -345,6 +404,7 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
                     Motion *solTrav = approxsol;
                     while (solTrav->parent_ != nullptr)
                     {
+                        next_root_ = solTrav;
                         prevSolution_.push_back(si_->cloneState(solTrav->state_));
                         prevSolutionControls_.push_back(siC_->cloneControl(solTrav->control_));
                         prevSolutionSteps_.push_back(solTrav->steps_);
@@ -367,6 +427,7 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
 
                         oldRep->state_ = nullptr;
                         oldRep->control_ = nullptr;
+                        oldRep->parent_->children_.erase(std::remove(oldRep->parent_->children_.begin(), oldRep->parent_->children_.end(), oldRep), oldRep->parent_->children_.end());
                         oldRep->parent_->numChildren_--;
                         Motion *oldRepParent = oldRep->parent_;
                         delete oldRep;
