@@ -211,17 +211,22 @@ ompl::control::SST::Witness *ompl::control::SST::findClosestWitness(ompl::contro
 }
 
 void ompl::control::SST::stepTree() {
-    // deparent next_root_ from its parent, nuke the parent, and null next_root_->parent_
+    // Deparent next_root_ from its parent, nuke the parent, and null next_root_->parent_
     next_root_->parent_->children_.erase(std::remove(next_root_->parent_->children_.begin(), next_root_->parent_->children_.end(), next_root_), next_root_->parent_->children_.end());
     next_root_->parent_->numChildren_--;
 
     nukeSubtree(next_root_->parent_);
 
     next_root_->parent_ = nullptr;
+    
+    // Discard previous solution (freed when replaced during solve)
+    if (opt_) {
+        prevSolutionCost_ = opt_->infiniteCost();
+    }
 }
 
 void ompl::control::SST::revalidateBelow(Motion *node) {
-    // for each child, if it is invalid call nukeSubtree on it, else revalidateBelow it
+    // For each child, if it is invalid call nukeSubtree on it, else revalidateBelow it
     for (auto &child : node->children_) {
         if (!siC_->isValid(child->state_)) {
             nukeSubtree(child);
@@ -233,7 +238,7 @@ void ompl::control::SST::revalidateBelow(Motion *node) {
 }
 
 void ompl::control::SST::nukeSubtree(Motion *node) {
-    // nuke all children, update the parent if necessary and free this node
+    // Nuke all children, update the parent if necessary, and free this node
     for (auto &child : node->children_) {
         nukeSubtree(child);
     }
