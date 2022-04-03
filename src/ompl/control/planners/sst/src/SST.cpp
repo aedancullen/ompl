@@ -367,6 +367,7 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
                     Motion *solTrav = solution;
                     while (solTrav->parent_ != nullptr)
                     {
+                        next_root_ = solTrav;
                         prevSolution_.push_back(si_->cloneState(solTrav->state_));
                         prevSolutionControls_.push_back(siC_->cloneControl(solTrav->control_));
                         prevSolutionSteps_.push_back(solTrav->steps_);
