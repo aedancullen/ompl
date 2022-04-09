@@ -210,6 +210,12 @@ ompl::control::SST::Witness *ompl::control::SST::findClosestWitness(ompl::contro
     }
 }
 
+void ompl::control::SST::QCPlanSetStatePropagatorConfig(std::vector<double> x_table, std::vector<double> y_table, std::vector<double> yaw_table) {
+}
+
+void ompl::control::SST::QCPlanStatePropagatorFn(const base::State *in, const Control *control, const double duration, base::State *out) {
+}
+
 void ompl::control::SST::stepTree() {
     // Deparent next_root_ from its parent, nuke the parent, and null next_root_->parent_
     next_root_->parent_->children_.erase(std::remove(next_root_->parent_->children_.begin(), next_root_->parent_->children_.end(), next_root_), next_root_->parent_->children_.end());

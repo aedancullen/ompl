@@ -147,6 +147,12 @@ namespace ompl
                 setup();
             }
 
+            void QCPlanSetStatePropagatorConfig(std::vector<double> x_table, std::vector<double> y_table, std::vector<double> yaw_table);
+            void QCPlanStatePropagatorFn(const base::State *in, const Control *control, const double duration, base::State *out);
+
+            void QCPlanSetStateValidityCheckerConfig(const base::State *scan_state);
+            bool QCPlanStateValidityCheckerFn(const base::State *in);
+
         protected:
             class Witness;
             /** \brief Representation of a motion
