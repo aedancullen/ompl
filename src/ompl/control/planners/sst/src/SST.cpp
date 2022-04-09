@@ -210,10 +210,66 @@ ompl::control::SST::Witness *ompl::control::SST::findClosestWitness(ompl::contro
     }
 }
 
-void ompl::control::SST::QCPlanSetStatePropagatorConfig(std::vector<double> x_table, std::vector<double> y_table, std::vector<double> yaw_table) {
+void ompl::control::SST::QCPlanSetStatePropagatorConfig(
+    const int length,
+    const int grid1l,
+    const int grid1h,
+    const int grid2l,
+    const int grid2h,
+    const int grid3l,
+    const int grid3h,
+    const int grid4l,
+    const int grid4h,
+    const int grid5l,
+    const int grid5h,
+    std::vector<double> x_table,
+    std::vector<double> y_table,
+    std::vector<double> yaw_table) {
+
+    grid1 = linspace(grid1l, grid1h, length);
+    grid2 = linspace(grid2l, grid2h, length);
+    grid3 = linspace(grid3l, grid3h, length);
+    grid4 = linspace(grid4l, grid4h, length);
+    grid5 = linspace(grid5l, grid5h, length);
+    grid_iter_list.clear();
+    grid_iter_list.push_back(grid1.begin());
+    grid_iter_list.push_back(grid2.begin());
+    grid_iter_list.push_back(grid3.begin());
+    grid_iter_list.push_back(grid4.begin());
+    grid_iter_list.push_back(grid5.begin());
+    grid_sizes[0] = length;
+    grid_sizes[1] = length;
+    grid_sizes[2] = length;
+    grid_sizes[3] = length;
+    grid_sizes[4] = length;
+    f_values_x = x_table;
+    f_values_y = y_table;
+    f_values_yaw = yaw_table;
+    if (interp_x) {
+        delete interp_x;
+    }
+    if (interp_y) {
+        delete interp_y;
+    }
+    if (interp_yaw) {
+        delete interp_yaw;
+    }
+    interp_x = new InterpMultilinear<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_x.data(), f_values_x.data() + (int)pow(5, length));
+    interp_y = new InterpMultilinear<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_y.data(), f_values_y.data() + (int)pow(5, length));
+    interp_yaw = new InterpMultilinear<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_yaw.data(), f_values_yaw.data() + (int)pow(5, length));
 }
 
 void ompl::control::SST::QCPlanStatePropagatorFn(const base::State *in, const Control *control, const double duration, base::State *out) {
+    array<double, 5> args;
+//     args[0] = in_p[0];
+//     args[1] = in_p[1];
+//     args[2] = in_p[2];
+//     args[3] = control_p[0];
+//     args[4] = control_p[1];
+    double result_x = interp_x->interp(args.begin());
+    double result_y = interp_y->interp(args.begin());
+    double result_yaw = interp_yaw->interp(args.begin());
+    si_->copyState(out, in);
 }
 
 void ompl::control::SST::stepTree() {

@@ -39,7 +39,9 @@
 
 #include "ompl/control/planners/PlannerIncludes.h"
 #include "ompl/datastructures/NearestNeighbors.h"
+
 #include "ompl/control/planners/sst/linterp.h"
+#include "ompl/control/spaces/RealVectorControlSpace.h"
 
 namespace ompl
 {
@@ -147,7 +149,34 @@ namespace ompl
                 setup();
             }
 
-            void QCPlanSetStatePropagatorConfig(std::vector<double> x_table, std::vector<double> y_table, std::vector<double> yaw_table);
+            std::vector<double> linspace(double first, double last, int len) {
+                std::vector<double> result(len);
+                double step = (last-first) / (len - 1);
+                for (int i=0; i<len; i++) { result[i] = first + i*step; }
+                return result;
+            }
+
+            std::vector<double> grid1, grid2, grid3, grid4, grid5;
+            std::vector< std::vector<double>::iterator > grid_iter_list;
+            array<int, 5> grid_sizes;
+            std::vector<double> f_values_x, f_values_y, f_values_yaw;
+            InterpMultilinear<5, double> *interp_x, *interp_y, *interp_yaw;
+
+            void QCPlanSetStatePropagatorConfig(
+                const int length,
+                const int grid1l,
+                const int grid1h,
+                const int grid2l,
+                const int grid2h,
+                const int grid3l,
+                const int grid3h,
+                const int grid4l,
+                const int grid4h,
+                const int grid5l,
+                const int grid5h,
+                std::vector<double> x_table,
+                std::vector<double> y_table,
+                std::vector<double> yaw_table);
             void QCPlanStatePropagatorFn(const base::State *in, const Control *control, const double duration, base::State *out);
 
             void QCPlanSetStateValidityCheckerConfig(const base::State *scan_state);
