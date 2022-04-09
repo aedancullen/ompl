@@ -39,6 +39,7 @@
 
 #include "ompl/control/planners/PlannerIncludes.h"
 #include "ompl/datastructures/NearestNeighbors.h"
+#include "linterp.h"
 
 namespace ompl
 {
