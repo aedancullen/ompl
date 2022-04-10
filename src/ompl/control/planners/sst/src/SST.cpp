@@ -249,13 +249,13 @@ void ompl::control::SST::QCPlanInitStatePropagator(
     grid_sizes[2] = length;
     grid_sizes[3] = length;
     grid_sizes[4] = length;
-    if (interp_x) {
+    if (interp_x != nullptr) {
         delete interp_x;
     }
-    if (interp_y) {
+    if (interp_y != nullptr) {
         delete interp_y;
     }
-    if (interp_yaw) {
+    if (interp_yaw != nullptr) {
         delete interp_yaw;
     }
     interp_x = new InterpSimplex<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_x.data(), f_values_x.data() + num_elements);

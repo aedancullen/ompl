@@ -167,7 +167,9 @@ namespace ompl
             std::vector<double> f_values_x = vector<double>(num_elements);
             std::vector<double> f_values_y = vector<double>(num_elements);
             std::vector<double> f_values_yaw = vector<double>(num_elements);
-            InterpSimplex<5, double> *interp_x, *interp_y, *interp_yaw;
+            InterpSimplex<5, double> *interp_x{nullptr};
+            InterpSimplex<5, double> *interp_y{nullptr};
+            InterpSimplex<5, double> *interp_yaw{nullptr};
 
             void QCPlanSetStatePropagatorCell(
                 const int idx,
