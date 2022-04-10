@@ -290,6 +290,13 @@ void ompl::control::SST::QCPlanStatePropagatorFn(const base::State *in, const Co
     out_vec[2] = result_yaw;
 }
 
+void ompl::control::SST::QCPlanSetStateValidityCheckerConfig(const base::State *scan_state) {
+}
+
+bool ompl::control::SST::QCPlanStateValidityCheckerFn(const base::State *in) {
+    return si_->satisfiesBounds(in);
+}
+
 void ompl::control::SST::stepTree() {
     // Deparent next_root_ from its parent, nuke the parent, and null next_root_->parent_
     next_root_->parent_->children_.erase(std::remove(next_root_->parent_->children_.begin(), next_root_->parent_->children_.end(), next_root_), next_root_->parent_->children_.end());
