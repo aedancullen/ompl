@@ -42,6 +42,7 @@
 
 #include "ompl/control/planners/sst/linterp.h"
 #include "ompl/control/spaces/RealVectorControlSpace.h"
+#include "ompl/base/spaces/SE2StateSpace.h"
 
 namespace ompl
 {
@@ -160,7 +161,7 @@ namespace ompl
             std::vector< std::vector<double>::iterator > grid_iter_list;
             array<int, 5> grid_sizes;
             std::vector<double> f_values_x, f_values_y, f_values_yaw;
-            InterpMultilinear<5, double> *interp_x, *interp_y, *interp_yaw;
+            InterpSimplex<5, double> *interp_x, *interp_y, *interp_yaw;
 
             void QCPlanSetStatePropagatorConfig(
                 const int length,

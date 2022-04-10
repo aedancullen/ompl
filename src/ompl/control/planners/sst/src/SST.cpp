@@ -254,22 +254,40 @@ void ompl::control::SST::QCPlanSetStatePropagatorConfig(
     if (interp_yaw) {
         delete interp_yaw;
     }
-    interp_x = new InterpMultilinear<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_x.data(), f_values_x.data() + (int)pow(5, length));
-    interp_y = new InterpMultilinear<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_y.data(), f_values_y.data() + (int)pow(5, length));
-    interp_yaw = new InterpMultilinear<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_yaw.data(), f_values_yaw.data() + (int)pow(5, length));
+    interp_x = new InterpSimplex<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_x.data(), f_values_x.data() + (int)pow(length, 5));
+    interp_y = new InterpSimplex<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_y.data(), f_values_y.data() + (int)pow(length, 5));
+    interp_yaw = new InterpSimplex<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_yaw.data(), f_values_yaw.data() + (int)pow(length, 5));
 }
 
 void ompl::control::SST::QCPlanStatePropagatorFn(const base::State *in, const Control *control, const double duration, base::State *out) {
     array<double, 5> args;
-//     args[0] = in_p[0];
-//     args[1] = in_p[1];
-//     args[2] = in_p[2];
-//     args[3] = control_p[0];
-//     args[4] = control_p[1];
+
+    auto *in_com = in->as<base::CompoundStateSpace::StateType>();
+    auto *in_se2 = in_com->as<base::SE2StateSpace::StateType>(0);
+    auto *in_pos = in_se2->as<base::RealVectorStateSpace::StateType>(0)->values;
+    auto in_rot = in_se2->as<base::SO2StateSpace::StateType>(1)->value;
+    auto *in_vec = in_com->as<base::RealVectorStateSpace::StateType>(1)->values;
+    auto *control_vec = control->as<RealVectorControlSpace::ControlType>()->values;
+    args[0] = in_vec[0];
+    args[1] = in_vec[1];
+    args[2] = in_vec[2];
+    args[3] = control_vec[0];
+    args[4] = control_vec[1];
+
     double result_x = interp_x->interp(args.begin());
     double result_y = interp_y->interp(args.begin());
     double result_yaw = interp_yaw->interp(args.begin());
-    si_->copyState(out, in);
+
+    auto *out_com = out->as<base::CompoundStateSpace::StateType>();
+    auto *out_se2 = out_com->as<base::SE2StateSpace::StateType>(0);
+    auto *out_vec = out_com->as<base::RealVectorStateSpace::StateType>(1)->values;
+    out_se2->setXY(
+        in_pos[0] + result_x * duration * cos(in_rot),
+        in_pos[1] + result_y * duration * sin(in_rot));
+    out_se2->setYaw(in_rot + result_yaw * duration);
+    out_vec[0] = result_x;
+    out_vec[1] = result_y;
+    out_vec[2] = result_yaw;
 }
 
 void ompl::control::SST::stepTree() {
