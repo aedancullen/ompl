@@ -157,14 +157,24 @@ namespace ompl
                 return result;
             }
 
-            std::vector<double> grid1, grid2, grid3, grid4, grid5;
+            const int length = 10;
+            const int num_elements = (int)pow(length, 5);
+            std::vector<double> grid0, grid1, grid2, grid3, grid4;
             std::vector< std::vector<double>::iterator > grid_iter_list;
             array<int, 5> grid_sizes;
-            std::vector<double> f_values_x, f_values_y, f_values_yaw;
+            std::vector<double> f_values_x = vector<double>(num_elements);
+            std::vector<double> f_values_y = vector<double>(num_elements);
+            std::vector<double> f_values_yaw = vector<double>(num_elements);
             InterpSimplex<5, double> *interp_x, *interp_y, *interp_yaw;
 
-            void QCPlanSetStatePropagatorConfig(
-                const int length,
+            void QCPlanSetStatePropagatorCell(
+                const int idx,
+                const double value_x,
+                const double value_y,
+                const double value_yaw);
+            void QCPlanInitStatePropagator(
+                const int grid0l,
+                const int grid0h,
                 const int grid1l,
                 const int grid1h,
                 const int grid2l,
@@ -172,16 +182,11 @@ namespace ompl
                 const int grid3l,
                 const int grid3h,
                 const int grid4l,
-                const int grid4h,
-                const int grid5l,
-                const int grid5h,
-                std::vector<double> &x_table,
-                std::vector<double> &y_table,
-                std::vector<double> &yaw_table);
+                const int grid4h);
             void QCPlanStatePropagatorFn(const base::State *in, const Control *control, const double duration, base::State *out);
 
-            void QCPlanSetStateValidityCheckerConfig(const base::State *scan_state);
-            bool QCPlanStateValidityCheckerFn(const base::State *in);
+//             void QCPlanSetStateValidityCheckerConfig(const base::State *scan_state);
+//             bool QCPlanStateValidityCheckerFn(const base::State *in);
 
         protected:
             class Witness;

@@ -210,8 +210,20 @@ ompl::control::SST::Witness *ompl::control::SST::findClosestWitness(ompl::contro
     }
 }
 
-void ompl::control::SST::QCPlanSetStatePropagatorConfig(
-    const int length,
+void ompl::control::SST::QCPlanSetStatePropagatorCell(
+    const int idx,
+    const double value_x,
+    const double value_y,
+    const double value_yaw) {
+
+    f_values_x[idx] = value_x;
+    f_values_y[idx] = value_y;
+    f_values_yaw[idx] = value_yaw;
+}
+
+void ompl::control::SST::QCPlanInitStatePropagator(
+    const int grid0l,
+    const int grid0h,
     const int grid1l,
     const int grid1h,
     const int grid2l,
@@ -219,32 +231,24 @@ void ompl::control::SST::QCPlanSetStatePropagatorConfig(
     const int grid3l,
     const int grid3h,
     const int grid4l,
-    const int grid4h,
-    const int grid5l,
-    const int grid5h,
-    std::vector<double> &x_table,
-    std::vector<double> &y_table,
-    std::vector<double> &yaw_table) {
+    const int grid4h) {
 
+    grid0 = linspace(grid0l, grid0h, length);
     grid1 = linspace(grid1l, grid1h, length);
     grid2 = linspace(grid2l, grid2h, length);
     grid3 = linspace(grid3l, grid3h, length);
     grid4 = linspace(grid4l, grid4h, length);
-    grid5 = linspace(grid5l, grid5h, length);
     grid_iter_list.clear();
+    grid_iter_list.push_back(grid0.begin());
     grid_iter_list.push_back(grid1.begin());
     grid_iter_list.push_back(grid2.begin());
     grid_iter_list.push_back(grid3.begin());
     grid_iter_list.push_back(grid4.begin());
-    grid_iter_list.push_back(grid5.begin());
     grid_sizes[0] = length;
     grid_sizes[1] = length;
     grid_sizes[2] = length;
     grid_sizes[3] = length;
     grid_sizes[4] = length;
-    f_values_x = x_table;
-    f_values_y = y_table;
-    f_values_yaw = yaw_table;
     if (interp_x) {
         delete interp_x;
     }
@@ -254,9 +258,9 @@ void ompl::control::SST::QCPlanSetStatePropagatorConfig(
     if (interp_yaw) {
         delete interp_yaw;
     }
-    interp_x = new InterpSimplex<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_x.data(), f_values_x.data() + (int)pow(length, 5));
-    interp_y = new InterpSimplex<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_y.data(), f_values_y.data() + (int)pow(length, 5));
-    interp_yaw = new InterpSimplex<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_yaw.data(), f_values_yaw.data() + (int)pow(length, 5));
+    interp_x = new InterpSimplex<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_x.data(), f_values_x.data() + num_elements);
+    interp_y = new InterpSimplex<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_y.data(), f_values_y.data() + num_elements);
+    interp_yaw = new InterpSimplex<5, double>(grid_iter_list.begin(), grid_sizes.begin(), f_values_yaw.data(), f_values_yaw.data() + num_elements);
 }
 
 void ompl::control::SST::QCPlanStatePropagatorFn(const base::State *in, const Control *control, const double duration, base::State *out) {
@@ -290,12 +294,12 @@ void ompl::control::SST::QCPlanStatePropagatorFn(const base::State *in, const Co
     out_vec[2] = result_yaw;
 }
 
-void ompl::control::SST::QCPlanSetStateValidityCheckerConfig(const base::State *scan_state) {
-}
-
-bool ompl::control::SST::QCPlanStateValidityCheckerFn(const base::State *in) {
-    return si_->satisfiesBounds(in);
-}
+// void ompl::control::SST::QCPlanSetStateValidityCheckerConfig(const base::State *scan_state) {
+// }
+//
+// bool ompl::control::SST::QCPlanStateValidityCheckerFn(const base::State *in) {
+//     return si_->satisfiesBounds(in);
+// }
 
 void ompl::control::SST::stepTree() {
     // Deparent next_root_ from its parent, nuke the parent, and null next_root_->parent_
