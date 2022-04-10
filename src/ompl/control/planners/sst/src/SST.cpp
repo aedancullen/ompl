@@ -222,9 +222,9 @@ void ompl::control::SST::QCPlanSetStatePropagatorConfig(
     const int grid4h,
     const int grid5l,
     const int grid5h,
-    std::vector<double> x_table,
-    std::vector<double> y_table,
-    std::vector<double> yaw_table) {
+    std::vector<double> &x_table,
+    std::vector<double> &y_table,
+    std::vector<double> &yaw_table) {
 
     grid1 = linspace(grid1l, grid1h, length);
     grid2 = linspace(grid2l, grid2h, length);
