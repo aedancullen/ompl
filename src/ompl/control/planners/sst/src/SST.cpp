@@ -233,11 +233,11 @@ void ompl::control::SST::QCPlanInitStatePropagator(
     const int grid4l,
     const int grid4h) {
 
-    grid0 = linspace(grid0l, grid0h, length);
-    grid1 = linspace(grid1l, grid1h, length);
-    grid2 = linspace(grid2l, grid2h, length);
-    grid3 = linspace(grid3l, grid3h, length);
-    grid4 = linspace(grid4l, grid4h, length);
+    linspace(grid0, grid0l, grid0h, length);
+    linspace(grid1, grid1l, grid1h, length);
+    linspace(grid2, grid2l, grid2h, length);
+    linspace(grid3, grid3l, grid3h, length);
+    linspace(grid4, grid4l, grid4h, length);
     grid_iter_list.clear();
     grid_iter_list.push_back(grid0.begin());
     grid_iter_list.push_back(grid1.begin());

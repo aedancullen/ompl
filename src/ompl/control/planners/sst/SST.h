@@ -150,16 +150,18 @@ namespace ompl
                 setup();
             }
 
-            std::vector<double> linspace(double first, double last, int len) {
-                std::vector<double> result(len);
+            void linspace(std::vector<double> &arr, double first, double last, int len) {
                 double step = (last-first) / (len - 1);
-                for (int i=0; i<len; i++) { result[i] = first + i*step; }
-                return result;
+                for (int i=0; i<len; i++) { arr[i] = first + i*step; }
             }
 
             const int length = 10;
             const int num_elements = (int)pow(length, 5);
-            std::vector<double> grid0, grid1, grid2, grid3, grid4;
+            std::vector<double> grid0 = vector<double>(length);
+            std::vector<double> grid1 = vector<double>(length);
+            std::vector<double> grid2 = vector<double>(length);
+            std::vector<double> grid3 = vector<double>(length);
+            std::vector<double> grid4 = vector<double>(length);
             std::vector< std::vector<double>::iterator > grid_iter_list;
             array<int, 5> grid_sizes;
             std::vector<double> f_values_x = vector<double>(num_elements);
