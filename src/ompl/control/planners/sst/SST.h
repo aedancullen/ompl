@@ -189,9 +189,6 @@ namespace ompl
                 const int grid4h);
             void QCPlanStatePropagatorFn(const base::State *in, const Control *control, const double duration, base::State *out);
 
-//             void QCPlanSetStateValidityCheckerConfig(const base::State *scan_state);
-//             bool QCPlanStateValidityCheckerFn(const base::State *in);
-
         protected:
             class Witness;
             /** \brief Representation of a motion
