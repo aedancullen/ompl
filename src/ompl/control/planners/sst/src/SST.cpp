@@ -363,10 +363,6 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
             findClosestWitness(motion);
         }
     }
-    else {
-        stepTree();
-        revalidateBelow(next_root_);
-    }
 
     if (nn_->size() == 0)
     {
