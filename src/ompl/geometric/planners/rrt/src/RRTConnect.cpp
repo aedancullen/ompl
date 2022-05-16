@@ -227,14 +227,15 @@ ompl::base::PlannerStatus ompl::geometric::RRTConnect::solve(const base::Planner
     double approxdif = std::numeric_limits<double>::infinity();
     auto *rmotion = new Motion(si_);
     base::State *rstate = rmotion->state;
+    bool startTree = true;
     bool solved = false;
 
     while (!ptc)
     {
-        TreeData &tree = startTree_ ? tStart_ : tGoal_;
-        tgi.start = startTree_;
-        startTree_ = !startTree_;
-        TreeData &otherTree = startTree_ ? tStart_ : tGoal_;
+        TreeData &tree = startTree ? tStart_ : tGoal_;
+        tgi.start = startTree;
+        startTree = !startTree;
+        TreeData &otherTree = startTree ? tStart_ : tGoal_;
 
         if (tGoal_->size() == 0 || pis_.getSampledGoalsCount() < tGoal_->size() / 2)
         {
@@ -270,7 +271,7 @@ ompl::base::PlannerStatus ompl::geometric::RRTConnect::solve(const base::Planner
             if (gs != REACHED)
                 si_->copyState(rstate, tgi.xstate);
 
-            tgi.start = startTree_;
+            tgi.start = startTree;
 
             /* if initial progress cannot be done from the otherTree, restore tgi.start */
             GrowState gsc = growTree(otherTree, tgi, rmotion);
