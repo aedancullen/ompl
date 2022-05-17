@@ -190,7 +190,6 @@ namespace ompl
             void QCPlanStatePropagatorFn(const base::State *in, const Control *control, const double duration, base::State *out);
 
         protected:
-            class Witness;
             /** \brief Representation of a motion
 
                 This only contains pointers to parent motions as we
@@ -238,8 +237,6 @@ namespace ompl
                 bool inactive_{false};
 
                 std::vector<Motion *> children_;
-
-                std::vector<Witness *> linked_;
             };
 
             class Witness : public Motion
@@ -325,7 +322,6 @@ namespace ompl
             Motion *next_root_{nullptr};
 
             void stepTree();
-            void revalidateBelow(Motion *root);
             void nukeSubtree(Motion *root);
         };
     }

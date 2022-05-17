@@ -193,7 +193,6 @@ ompl::control::SST::Witness *ompl::control::SST::findClosestWitness(ompl::contro
         {
             closest = new Witness(siC_);
             closest->linkRep(node);
-            node->linked_.push_back(closest);
             si_->copyState(closest->state_, node->state_);
             witnesses_->add(closest);
         }
@@ -203,7 +202,6 @@ ompl::control::SST::Witness *ompl::control::SST::findClosestWitness(ompl::contro
     {
         auto *closest = new Witness(siC_);
         closest->linkRep(node);
-        node->linked_.push_back(closest);
         si_->copyState(closest->state_, node->state_);
         witnesses_->add(closest);
         return closest;
@@ -295,11 +293,14 @@ void ompl::control::SST::QCPlanStatePropagatorFn(const base::State *in, const Co
 }
 
 void ompl::control::SST::stepTree() {
-    // Deparent next_root_ from its parent, nuke the parent, and null next_root_->parent_
-    next_root_->parent_->children_.erase(std::remove(next_root_->parent_->children_.begin(), next_root_->parent_->children_.end(), next_root_), next_root_->parent_->children_.end());
-    next_root_->parent_->numChildren_--;
+    next_root_->parent_->inactive_ = true;
+    next_root_->parent_->accCost_ = opt_->infiniteCost();
 
-    nukeSubtree(next_root_->parent_);
+    for (auto &child : next_root_->parent_->children_) {
+        if (child != next_root_) {
+            nukeSubtree(child);
+        }
+    }
 
     next_root_->parent_ = nullptr;
     
@@ -309,41 +310,13 @@ void ompl::control::SST::stepTree() {
     }
 }
 
-void ompl::control::SST::revalidateBelow(Motion *node) {
-    // For each child, if it is invalid call nukeSubtree on it, else revalidateBelow it
-    for (auto &child : node->children_) {
-        if (!siC_->isValid(child->state_)) {
-            nukeSubtree(child);
-        }
-        else {
-            revalidateBelow(child);
-        }
-    }
-}
-
 void ompl::control::SST::nukeSubtree(Motion *node) {
-    // Nuke all children, update the parent if necessary, and free this node
+    node->inactive_ = true;
+    node->accCost_ = opt_->infiniteCost();
+
     for (auto &child : node->children_) {
         nukeSubtree(child);
     }
-
-    if (node->parent_ != nullptr) {
-        node->parent_->children_.erase(std::remove(node->parent_->children_.begin(), node->parent_->children_.end(), node), node->parent_->children_.end());
-        node->parent_->numChildren_--;
-    }
-
-    for (auto &witness : node->linked_) {
-        witnesses_->remove(witness);
-        delete witness;
-    }
-    nn_->remove(node);
-    if (node->state_) {
-        si_->freeState(node->state_);
-    }
-    if (node->control_) {
-        siC_->freeControl(node->control_);
-    }
-    delete node;
 }
 
 ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminationCondition &ptc)
@@ -423,9 +396,7 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
                 motion->parent_ = nmotion;
                 nmotion->children_.push_back(motion);
                 nmotion->numChildren_++;
-                closestWitness->rep_->linked_.erase(std::remove(closestWitness->rep_->linked_.begin(), closestWitness->rep_->linked_.end(), closestWitness), closestWitness->rep_->linked_.end());
                 closestWitness->linkRep(motion);
-                motion->linked_.push_back(closestWitness);
 
                 nn_->add(motion);
                 double dist = 0.0;
@@ -503,7 +474,6 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
 
                         oldRep->state_ = nullptr;
                         oldRep->control_ = nullptr;
-                        oldRep->parent_->children_.erase(std::remove(oldRep->parent_->children_.begin(), oldRep->parent_->children_.end(), oldRep), oldRep->parent_->children_.end());
                         oldRep->parent_->numChildren_--;
                         Motion *oldRepParent = oldRep->parent_;
                         delete oldRep;
