@@ -237,7 +237,7 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
     if (!sampler_)
         sampler_ = si_->allocStateSampler();
     if (!controlSampler_)
-        controlSampler_ = siC_->allocControlSampler();
+        controlSampler_ = siC_->allocDirectedControlSampler();
 
     OMPL_INFORM("%s: Starting planning with %u states already in datastructure\n", getName().c_str(), nn_->size());
 
@@ -287,10 +287,8 @@ ompl::base::PlannerStatus ompl::control::SST::solve(const base::PlannerTerminati
             /* find closest state in the tree */
             nmotion = selectNode(rmotion);
 
-            /* sample a random control that attempts to go towards the random state, and also sample a control duration */
-            controlSampler_->sample(rctrl, nmotion->state_, nmotion->numSelections_);
-            cd = rng_.uniformInt(siC_->getMinControlDuration(), siC_->getMaxControlDuration());
-            propCd = siC_->propagateWhileValid(nmotion->state_, rctrl, cd, rstate);
+            cd = 1;
+            propCd = controlSampler_->sampleTo(rctrl, nmotion->state_, rstate);
 
             nmotion->numSelections_++;
         }
